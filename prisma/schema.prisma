@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String?
+  password  String
+  students  Student[]
+  exercises Exercise[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Exercise {
+  id           String             @id @default(cuid())
+  actionType   String
+  name         String
+  equipment    String?
+  muscleGroup  String?
+  notes        String?
+  isSystem     Boolean            @default(false)
+  trainerId    String?
+  trainer      User?              @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  usages       TrainingExercise[]
+  createdAt    DateTime           @default(now())
+
+  @@index([actionType])
+  @@index([trainerId])
+}
+
+model Student {
+  id               String             @id @default(cuid())
+  trainerId        String
+  trainer          User               @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  fullName         String
+  birthDate        DateTime?
+  gender           String?
+  profession       String?
+  phone            String?
+  email            String?
+  address          String?
+  activityLevel    String?
+  weight           Float?
+  height           Float?
+  bodyFatPercent   Float?
+  leanMass         Float?
+  waistCm          Float?
+  hipCm            Float?
+  thighCm          Float?
+  assessmentDate   DateTime?
+  mainGoal         String?
+  practiceYears    String?
+  modalities       String?
+  injuryHistory    String?
+  healthConditions String?
+  medications      String?
+  likes            String?
+  dislikes         String?
+  trainerNotes     String?
+  shortTermGoals   String?
+  assessment       StudentAssessment?
+  cycles           TrainingCycle[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([trainerId])
+}
+
+model StudentAssessment {
+  id                       String   @id @default(cuid())
+  studentId                String   @unique
+  student                  Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  overheadSquat            String?
+  hipHinge                 String?
+  shoulderInternalRotLeft  String?
+  shoulderInternalRotRight String?
+  shoulderExternalRotLeft  String?
+  shoulderExternalRotRight String?
+  lungeLeft                String?
+  lungeRight               String?
+  stepDownLeft             String?
+  stepDownRight            String?
+  ankleMobilityLeft        String?
+  ankleMobilityRight       String?
+  posteriorThighLeft       String?
+  posteriorThighRight      String?
+  bilateralBridge          String?
+  unilateralBridgeLeft     String?
+  unilateralBridgeRight    String?
+  hipInternalRotLeft       String?
+  hipInternalRotRight      String?
+  hipExternalRotLeft       String?
+  hipExternalRotRight      String?
+  isometricPlank           String?
+  pushUp                   String?
+  pullUp                   String?
+  legLengthCm              String?
+  legLength90              String?
+  hamstrings110Left        String?
+  hamstrings110Right       String?
+  updatedAt                DateTime @updatedAt
+}
+
+model TrainingCycle {
+  id          String     @id @default(cuid())
+  studentId   String
+  student     Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  cycleNumber Int
+  name        String?
+  startDate   DateTime?
+  endDate     DateTime?
+  trainings   Training[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([studentId, cycleNumber])
+  @@index([studentId])
+}
+
+model Training {
+  id             String             @id @default(cuid())
+  cycleId        String
+  cycle          TrainingCycle      @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  trainingNumber Int
+  observations   String?
+  exercises      TrainingExercise[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@unique([cycleId, trainingNumber])
+}
+
+model TrainingExercise {
+  id           String    @id @default(cuid())
+  trainingId   String
+  training     Training  @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  exerciseId   String?
+  exercise     Exercise? @relation(fields: [exerciseId], references: [id])
+  order        Int
+  dominance    String?
+  muscleTarget String?
+  exerciseName String?
+  series       Int?
+  reps         String?
+  loadKg       Float?
+  restSeconds  Int?
+  rpe          Int?
+
+  @@index([trainingId])
+}
