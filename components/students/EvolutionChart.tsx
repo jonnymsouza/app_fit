@@ -73,7 +73,7 @@ export function EvolutionChart({ cycles }: Props) {
             <XAxis dataKey="name" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 11 }} unit=" kg" />
             <Tooltip
-              formatter={(value: number, name: string) =>
+              formatter={(value, name) =>
                 name === "Carga (kg)" ? [`${value} kg`, name] : [value, name]
               }
             />
