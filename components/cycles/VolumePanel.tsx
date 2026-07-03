@@ -15,7 +15,7 @@ type Props = {
   mobile?: boolean
 }
 
-const TRAINING_COLORS = ["#1e3a5f", "#c0392b", "#27ae60", "#7b2d8b"]
+const TRAINING_COLORS = ["#1e3a5f", "#c0392b", "#27ae60", "#7b2d8b", "#0891b2"]
 
 function VolumePanelContent({
   trainings,
@@ -33,7 +33,7 @@ function VolumePanelContent({
     <div className="space-y-4">
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="bg-[#0d1b2a] text-white text-xs font-semibold px-4 py-2">
-          Resumo de Volume por Dominância
+          Tonelagem por Dominância (kg)
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
@@ -90,7 +90,7 @@ function VolumePanelContent({
       {chartData.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <div className="text-xs font-semibold text-gray-600 mb-3">
-            Volume — Treino {trainings[activeTraining].trainingNumber}
+            Tonelagem (kg) — Treino {trainings[activeTraining].trainingNumber}
           </div>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={chartData} margin={{ top: 0, right: 0, left: -24, bottom: 0 }}>

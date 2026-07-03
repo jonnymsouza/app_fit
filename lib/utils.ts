@@ -50,11 +50,15 @@ export const ACTION_TYPE_TO_DOMINANCE: Record<string, string> = {
 export const DOMINANCES = ["Joelho", "Quadril", "Empurrada", "Puxada", "Core"] as const
 export type Dominance = (typeof DOMINANCES)[number]
 
-export function calcVolume(exercises: { dominance?: string | null; series?: number | null }[]) {
+export function calcVolume(
+  exercises: { dominance?: string | null; series?: number | null; repsMin?: string | null; loadKg?: number | null }[]
+) {
   const vol: Record<string, number> = { Joelho: 0, Quadril: 0, Empurrada: 0, Puxada: 0, Core: 0 }
   for (const ex of exercises) {
     if (ex.dominance && ex.series && vol[ex.dominance] !== undefined) {
-      vol[ex.dominance] += ex.series
+      const reps = parseInt(ex.repsMin || "0") || 0
+      const load = ex.loadKg ?? 0
+      vol[ex.dominance] += Math.round((ex.series ?? 0) * reps * load)
     }
   }
   return vol

@@ -41,7 +41,61 @@ const empty: StudentFormData = {
   trainerNotes: "", shortTermGoals: "",
 }
 
-type Props = { initial?: Partial<StudentFormData>; studentId?: string }
+type AssessmentData = Record<string, string>
+
+const emptyAssessment: AssessmentData = {
+  overheadSquat: "", hipHinge: "",
+  shoulderInternalRotLeft: "", shoulderInternalRotRight: "",
+  shoulderExternalRotLeft: "", shoulderExternalRotRight: "",
+  lungeLeft: "", lungeRight: "",
+  stepDownLeft: "", stepDownRight: "",
+  ankleMobilityLeft: "", ankleMobilityRight: "",
+  posteriorThighLeft: "", posteriorThighRight: "",
+  bilateralBridge: "",
+  unilateralBridgeLeft: "", unilateralBridgeRight: "",
+  hipInternalRotLeft: "", hipInternalRotRight: "",
+  hipExternalRotLeft: "", hipExternalRotRight: "",
+  isometricPlank: "", pushUp: "", pullUp: "",
+  legLengthCm: "", legLength90: "",
+  hamstrings110Left: "", hamstrings110Right: "",
+}
+
+const QUALITATIVE = ["Normal", "Alterado", "Disfuncional"]
+
+function AField({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  options,
+  colSpan,
+}: {
+  label: string
+  name: string
+  value: string
+  onChange: (name: string, val: string) => void
+  type?: string
+  options?: string[]
+  colSpan?: boolean
+}) {
+  const base = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+  return (
+    <div className={colSpan ? "col-span-full" : ""}>
+      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      {options ? (
+        <select className={base} value={value} onChange={(e) => onChange(name, e.target.value)}>
+          <option value="">—</option>
+          {options.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+      ) : (
+        <input type={type} className={base} value={value} onChange={(e) => onChange(name, e.target.value)} />
+      )}
+    </div>
+  )
+}
+
+type Props = { initial?: Partial<StudentFormData>; studentId?: string; initialAssessment?: Record<string, string | null> | null }
 
 function AccordionSection({
   title,
@@ -120,14 +174,27 @@ function hasAny(form: StudentFormData, keys: (keyof StudentFormData)[]): boolean
   return keys.some((k) => !!form[k])
 }
 
-export function StudentForm({ initial, studentId }: Props) {
+export function StudentForm({ initial, studentId, initialAssessment }: Props) {
   const router = useRouter()
   const [form, setForm] = useState<StudentFormData>({ ...empty, ...initial })
+  const [assessment, setAssessmentState] = useState<AssessmentData>(() => {
+    const base = { ...emptyAssessment }
+    if (initialAssessment) {
+      for (const [k, v] of Object.entries(initialAssessment)) {
+        if (k in base) base[k] = v ?? ""
+      }
+    }
+    return base
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
   function set(name: keyof StudentFormData, val: string) {
     setForm((f) => ({ ...f, [name]: val }))
+  }
+
+  function setAss(name: string, val: string) {
+    setAssessmentState((a) => ({ ...a, [name]: val }))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -139,13 +206,17 @@ export function StudentForm({ initial, studentId }: Props) {
       Object.entries(form).map(([k, v]) => [k, v === "" ? undefined : v])
     )
 
+    const assessmentPayload = Object.fromEntries(
+      Object.entries(assessment).map(([k, v]) => [k, v === "" ? null : v])
+    )
+
     const url = studentId ? `/api/students/${studentId}` : "/api/students"
     const method = studentId ? "PUT" : "POST"
 
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ ...payload, assessment: assessmentPayload }),
     })
 
     if (!res.ok) {
@@ -163,6 +234,7 @@ export function StudentForm({ initial, studentId }: Props) {
   const measuresHasData = hasAny(form, ["weight", "height", "bodyFatPercent", "leanMass", "waistCm", "hipCm", "thighCm", "assessmentDate"])
   const historyHasData = hasAny(form, ["mainGoal", "practiceYears", "modalities", "injuryHistory", "healthConditions", "medications"])
   const prefsHasData = hasAny(form, ["likes", "dislikes", "trainerNotes", "shortTermGoals"])
+  const assessmentHasData = Object.values(assessment).some((v) => !!v)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
@@ -221,6 +293,48 @@ export function StudentForm({ initial, studentId }: Props) {
         <Field label="Não Gosta / Evitar" name="dislikes" value={form.dislikes} onChange={set} rows={2} colSpan />
         <Field label="Observações do Personal" name="trainerNotes" value={form.trainerNotes} onChange={set} rows={2} colSpan />
         <Field label="Metas de Curto Prazo" name="shortTermGoals" value={form.shortTermGoals} onChange={set} rows={2} colSpan />
+      </AccordionSection>
+
+      <AccordionSection title="Testes Funcionais" defaultOpen={assessmentHasData}>
+        <div className="col-span-full text-xs text-gray-500 -mt-1 mb-1">Padrões de movimento globais</div>
+        <AField label="Overhead Squat" name="overheadSquat" value={assessment.overheadSquat} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Hip Hinge" name="hipHinge" value={assessment.hipHinge} onChange={setAss} options={QUALITATIVE} />
+
+        <div className="col-span-full text-xs font-medium text-gray-500 border-t border-gray-100 pt-2">Ombro</div>
+        <AField label="Rotação Interna — Esq." name="shoulderInternalRotLeft" value={assessment.shoulderInternalRotLeft} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Rotação Interna — Dir." name="shoulderInternalRotRight" value={assessment.shoulderInternalRotRight} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Rotação Externa — Esq." name="shoulderExternalRotLeft" value={assessment.shoulderExternalRotLeft} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Rotação Externa — Dir." name="shoulderExternalRotRight" value={assessment.shoulderExternalRotRight} onChange={setAss} options={QUALITATIVE} />
+
+        <div className="col-span-full text-xs font-medium text-gray-500 border-t border-gray-100 pt-2">Membros Inferiores</div>
+        <AField label="Afundo — Esq." name="lungeLeft" value={assessment.lungeLeft} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Afundo — Dir." name="lungeRight" value={assessment.lungeRight} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Step Down — Esq." name="stepDownLeft" value={assessment.stepDownLeft} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Step Down — Dir." name="stepDownRight" value={assessment.stepDownRight} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Mobilidade Tornozelo — Esq." name="ankleMobilityLeft" value={assessment.ankleMobilityLeft} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Mobilidade Tornozelo — Dir." name="ankleMobilityRight" value={assessment.ankleMobilityRight} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Posterior Coxa — Esq." name="posteriorThighLeft" value={assessment.posteriorThighLeft} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Posterior Coxa — Dir." name="posteriorThighRight" value={assessment.posteriorThighRight} onChange={setAss} options={QUALITATIVE} />
+
+        <div className="col-span-full text-xs font-medium text-gray-500 border-t border-gray-100 pt-2">Quadril</div>
+        <AField label="Ponte Bilateral" name="bilateralBridge" value={assessment.bilateralBridge} onChange={setAss} options={QUALITATIVE} colSpan />
+        <AField label="Ponte Unilateral — Esq." name="unilateralBridgeLeft" value={assessment.unilateralBridgeLeft} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Ponte Unilateral — Dir." name="unilateralBridgeRight" value={assessment.unilateralBridgeRight} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Rotação Interna Quadril — Esq." name="hipInternalRotLeft" value={assessment.hipInternalRotLeft} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Rotação Interna Quadril — Dir." name="hipInternalRotRight" value={assessment.hipInternalRotRight} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Rotação Externa Quadril — Esq." name="hipExternalRotLeft" value={assessment.hipExternalRotLeft} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Rotação Externa Quadril — Dir." name="hipExternalRotRight" value={assessment.hipExternalRotRight} onChange={setAss} options={QUALITATIVE} />
+
+        <div className="col-span-full text-xs font-medium text-gray-500 border-t border-gray-100 pt-2">Força e Resistência</div>
+        <AField label="Prancha Isométrica" name="isometricPlank" value={assessment.isometricPlank} onChange={setAss} />
+        <AField label="Flexão de Braço (reps)" name="pushUp" value={assessment.pushUp} onChange={setAss} type="number" />
+        <AField label="Barra Fixa (reps)" name="pullUp" value={assessment.pullUp} onChange={setAss} type="number" />
+
+        <div className="col-span-full text-xs font-medium text-gray-500 border-t border-gray-100 pt-2">Comprimento e Flexibilidade</div>
+        <AField label="Comprimento Membro Inf. (cm)" name="legLengthCm" value={assessment.legLengthCm} onChange={setAss} type="number" />
+        <AField label="Comprimento a 90°" name="legLength90" value={assessment.legLength90} onChange={setAss} />
+        <AField label="Posterior 110° — Esq." name="hamstrings110Left" value={assessment.hamstrings110Left} onChange={setAss} options={QUALITATIVE} />
+        <AField label="Posterior 110° — Dir." name="hamstrings110Right" value={assessment.hamstrings110Right} onChange={setAss} options={QUALITATIVE} />
       </AccordionSection>
 
       <div className="flex gap-3 pt-2">

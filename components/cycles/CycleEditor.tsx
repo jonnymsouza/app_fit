@@ -189,8 +189,8 @@ function blankRow(order: number): ExRow {
   }
 }
 
-const TRAINING_COLORS = ["#1e3a5f", "#c0392b", "#27ae60", "#7b2d8b"]
-const TRAINING_NAMES = ["Treino A", "Treino B", "Treino C", "Treino D"]
+const TRAINING_COLORS = ["#1e3a5f", "#c0392b", "#27ae60", "#7b2d8b", "#0891b2"]
+const TRAINING_NAMES = ["Treino A", "Treino B", "Treino C", "Treino D", "Liberações e Mob."]
 
 type Props = {
   cycleId: string
@@ -290,7 +290,12 @@ export function CycleEditor({ cycleId, studentId, initialName, initialStartDate,
   }
 
   const allVolumes = state.map((t) =>
-    calcVolume(t.exercises.map((r) => ({ dominance: r.dominance, series: parseInt(r.series) || 0 })))
+    calcVolume(t.exercises.map((r) => ({
+      dominance: r.dominance,
+      series: parseInt(r.series) || 0,
+      repsMin: r.repsMin,
+      loadKg: r.loadKg ? parseFloat(r.loadKg) : 0,
+    })))
   )
 
   const totalVol = DOMINANCES.reduce(

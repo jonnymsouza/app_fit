@@ -45,7 +45,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       cycleNumber: nextNumber,
       name: `Ciclo ${String(nextNumber).padStart(2, "0")}`,
       trainings: {
-        create: [1, 2, 3, 4].map((n) => ({ trainingNumber: n })),
+        create: [1, 2, 3, 4, 5].map((n) => ({ trainingNumber: n })),
       },
     },
     include: { trainings: { orderBy: { trainingNumber: "asc" }, include: { exercises: true } } },

@@ -11,7 +11,7 @@ export default async function EditStudentPage({ params }: { params: Promise<{ id
   if (!session) return null
 
   const { id } = await params
-  const student = await prisma.student.findFirst({ where: { id, trainerId: session.user.id } })
+  const student = await prisma.student.findFirst({ where: { id, trainerId: session.user.id }, include: { assessment: true } })
   if (!student) notFound()
 
   const initial = {
@@ -51,7 +51,11 @@ export default async function EditStudentPage({ params }: { params: Promise<{ id
         { label: "Editar" },
       ]} />
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Editar Aluno</h1>
-      <StudentForm initial={initial} studentId={id} />
+      <StudentForm initial={initial} studentId={id} initialAssessment={
+        student.assessment
+          ? (({ id: _id, studentId: _sid, updatedAt: _ua, ...rest }) => rest)(student.assessment)
+          : undefined
+      } />
     </div>
   )
 }
